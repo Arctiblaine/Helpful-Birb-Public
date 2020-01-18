@@ -1,3 +1,9 @@
+'''
+    "Archie Ford"
+    10/2/2019
+    Helpful Birb brings chats back to life
+        with questions and suggestions by you and for you!
+'''
 import discord
 from random import choice, randint
 from discord.ext import commands
@@ -647,10 +653,6 @@ async def board(ctx, arg='', mov1='', mov2='', mov3=''):
 
         await ctx.send(has_not_been_used)
 
-    else:
-        await ctx.send("This is the current state of the board.")
-        await ctx.send("```    " + board_str[0] + "\n   " + " ".join(board_str[1:3]) + "\n  " + " ".join(board_str[3:6]) + "\n " + ' '.join(board_str[6:10]) + "\n" + ' '.join(board_str[10:16]) + '```')
-
 @bot.command()
 async def whoami(ctx):
     user = ctx.message.author
@@ -760,31 +762,21 @@ async def number(ctx, inp1, inp2):
         await ctx.send(rand)
 
 @bot.command()
-# modified idea by Toasty
+# modified idea by Toasty, better algorithm by me.
 async def cat(ctx):
-    random_inp = str(random.randint(1, 10))
-    if random_inp == '1':
-        await ctx.send("http://giphygifs.s3.amazonaws.com/media/6C4y1oxC6182MsyjvK/giphy.gif")
-    elif random_inp == '2':
-        await ctx.send("https://media.giphy.com/media/WYEWpk4lRPDq0/giphy.gif")
-    elif random_inp == '3':
-        await ctx.send("http://giphygifs.s3.amazonaws.com/media/S6VGjvmFRu5Qk/giphy.gif")
-    elif random_inp == '4':
-        await ctx.send("http://giphygifs.s3.amazonaws.com/media/FZuRP6WaW5qg/giphy.gif")
-    elif random_inp == '5':
-        await ctx.send("https://media.giphy.com/media/rwCX06Y5XpbLG/giphy.gif")
-    elif random_inp == '6':
-        await ctx.send("https://media.giphy.com/media/10SAlsUFbyl5Dy/giphy.gif")
-    elif random_inp == '7':
-        await ctx.send("https://media.giphy.com/media/tBxyh2hbwMiqc/giphy.gif")
-    elif random_inp == '8':
-        await ctx.send("http://giphygifs.s3.amazonaws.com/media/iTOS89Y0gD1ny/giphy.gif")
-    elif random_inp == '9':
-        await ctx.send("http://giphygifs.s3.amazonaws.com/media/2QHLYZFJgjsFq/giphy.gif")
-    elif random_inp == '10':
-        await ctx.send("https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif")
-    else:
-        await ctx.send("https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif")
+    random_inp = random.randint(0, len(cat) - 1)
+    cat = ["http://giphygifs.s3.amazonaws.com/media/6C4y1oxC6182MsyjvK/giphy.gif", 
+	       "https://media.giphy.com/media/WYEWpk4lRPDq0/giphy.gif", 
+	       "http://giphygifs.s3.amazonaws.com/media/S6VGjvmFRu5Qk/giphy.gif", 
+	       "http://giphygifs.s3.amazonaws.com/media/FZuRP6WaW5qg/giphy.gif", 
+           "https://media.giphy.com/media/rwCX06Y5XpbLG/giphy.gif", 
+	       "https://media.giphy.com/media/10SAlsUFbyl5Dy/giphy.gif", 
+	       "https://media.giphy.com/media/tBxyh2hbwMiqc/giphy.gif", 
+           "http://giphygifs.s3.amazonaws.com/media/iTOS89Y0gD1ny/giphy.gif", 
+	       "http://giphygifs.s3.amazonaws.com/media/2QHLYZFJgjsFq/giphy.gif", 
+	       "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif"]
+
+    await ctx.send(cat[random_inp])
 
 @bot.command()
 async def feature_request(ctx):
@@ -865,7 +857,7 @@ async def help(ctx, arg=''):
         embed.add_field(name = "hb!despacito", value = "This is so sad. Alexa, play Despacito.", inline = False)
         embed.add_field(name = "hb!insult", value = "Sends an insult.", inline = False)
         embed.add_field(name = "hb!slap <user>", value = "Slap a user!", inline = False)
-        embed.add_field(name = "hb!blame <reason", value = "You didn't slap that user. Blame a random user.", inline = False)
+        embed.add_field(name = "hb!blame <reason>", value = "You didn't slap that user. Blame a random user.", inline = False)
         embed.add_field(name = "hb!fact", value = "Sends a random fact.", inline = False)
         embed.add_field(name = "hb!interro", value = "Sends you a *'truth or dare question,'* an interrogation question.", inline = False)
         embed.add_field(name = "hb!DanseisSynthDaddy", value = "Sends a picture of the synth daddy himself.", inline = False)
@@ -894,5 +886,5 @@ async def on_ready():
     print('------')
     await bot.change_presence(activity=discord.Game(name='hb!help'))
 
-token = ""
+token = your_token_here
 bot.run(token)
