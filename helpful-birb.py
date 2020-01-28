@@ -540,7 +540,24 @@ async def joke(ctx):
     await ctx.send(joke_key)
     await asyncio.sleep(5)
     await ctx.send(jokes[joke_key])
+			
+@bot.command()
+async def mock(ctx):
+    words = client.logs_from(general, limit=1)
+    for letter in words:
+    if type(letter) != str:
+        completeList.append(str(letter))
+    else:
+        if x%2 ==0:
+            upperLetter = letter.upper()
+            completeList.append(upperLetter)
+        else:
+            completeList.append(letter)
+        x += 1
+        s = ''.join(completeList)
 
+    await ctx.send(s)
+			
 @bot.command()
 async def eightball(ctx, *, question):
     responses = ['It is certain', 'It is decidedly so', 
@@ -862,6 +879,7 @@ async def help(ctx, arg=''):
         embed.add_field(name = "hb!interro", value = "Sends you a *'truth or dare question,'* an interrogation question.", inline = False)
         embed.add_field(name = "hb!DanseisSynthDaddy", value = "Sends a picture of the synth daddy himself.", inline = False)
         embed.add_field(name = "hb!cat", value = "Sends a random cat picture.", inline = False)
+	embed.add_field(name = "hb!mock", value = "CaLlS tHiS cOmMaNd.", inline = False)
         embed.set_footer(text = "A very helpful birb.")
         await ctx.send(embed=embed)
         
