@@ -439,6 +439,8 @@ solvable = ["000000000000001",
             "001000000000000",
             "010000000000000",
             "100000000000000"]
+
+msg = ""
                         
 def commands_birb():
 	class Slapper(commands.Converter):
@@ -529,15 +531,41 @@ async def joke(ctx):
              "Two cannibals are eating a clown.":"One cannibal turns to the other and asks, 'Does this taste funny to you?'",
              "War does not determine who is right.":"Only who is left.",
              "Ah, did I tell you?":"The best contraceptive for old people is nudity.",
-             "What kind of a doctor is Dr. Pepper?":"A 'fizz'-ician.", "Ash used to be wood...":"...but it was fired."}
+             "What kind of a doctor is Dr. Pepper?":"A 'fizz'-ician.", "Ash used to be wood...":"...but it was fired.",
+             "I was named after my dad.":"Because I couldn't possibly have been named before him.",
+             "I like to tell dad jokes.":"He always finds them funny.",
+             "What's green, has four legs, and is deadly when it jumps on you?":"A billiards table.",
+             "Why does society seem to hate lazy people?":"They didn't even do anything...",
+             "My stupid cousin thinks he's collected one of every board game ever made.":"That idiot doesnt have a Clue.",
+             "Oho, I ate a clock yesrerday and it was very time consuming.":"Especially when I went for seconds.",
+             "How was the Roman Empire cut in half?":"With a pair of Caesars.",
+             "I just started a business where we specialize in weighing tiny objects.":"It's a small scale operation."
+             }
+
     joke_key = random.choice(list(jokes.keys()))
     await ctx.send(joke_key)
     await asyncio.sleep(5)
     await ctx.send(jokes[joke_key])
 
+@client.event
+async def on_message(message):
+    global msg
+    if message.content.startswith("hb!"):
+        await bot.process_commands(message)
+    else:
+        msg = message
+        await bot.process_commands(message)
+        return msg
+
 @bot.command()
 async def mock(ctx):
-    words = await channel.history(limit=1).flatten()
+    global msg
+    msg = msg.content
+    # handle uppercase by forcing it to be lowercase.
+    msg = msg.lower()
+    words = msg
+    x = 0
+    completeList = []
     for letter in words:
         if type(letter) != str:
             completeList.append(str(letter))
@@ -550,6 +578,7 @@ async def mock(ctx):
             x += 1
             s = ''.join(completeList)
 
+    print(s)
     await ctx.send(s)
 
 @bot.command()
@@ -804,7 +833,7 @@ async def info(ctx):
     embed.add_field(name="Servers I'm on:", value=f"{len(bot.guilds)}", inline = False)
 
     # give users a link to invite thsi bot to their server
-    embed.add_field(name="Invite to Discord.py Server:", value="https://discord.gg/dpy", inline = False)
+    embed.add_field(name="Github", value="https://github.com/tiNsLeY799/Helpful-Birb-Public", inline = False)
 
     await ctx.send(embed=embed)
 
@@ -873,7 +902,7 @@ async def help(ctx, arg=''):
         embed.add_field(name = "hb!interro", value = "Sends you a *'truth or dare question,'* an interrogation question.", inline = False)
         embed.add_field(name = "hb!DanseisSynthDaddy", value = "Sends a picture of the synth daddy himself.", inline = False)
         embed.add_field(name = "hb!cat", value = "Sends a random cat picture.", inline = False)
-        embed.add_field(name = "hb!mock", value = "CaLlS tHiS cOmMaNd.", inline = False)
+        embed.add_field(name = "hb!mock", value = "CaLlS tHiS cOmMaNd. Mocks the last previous sent message (ignores bot calls.)", inline = False)
         embed.set_footer(text = "A very helpful birb.")
         await ctx.send(embed=embed)
         
