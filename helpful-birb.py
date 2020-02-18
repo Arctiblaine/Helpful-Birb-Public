@@ -1,9 +1,3 @@
-'''
-    "Archie Ford"
-    10/2/2019
-    Helpful Birb brings chats back to life
-        with questions and suggestions by you and for you!
-'''
 import discord
 from random import choice, randint
 from discord.ext import commands
@@ -540,24 +534,24 @@ async def joke(ctx):
     await ctx.send(joke_key)
     await asyncio.sleep(5)
     await ctx.send(jokes[joke_key])
-			
+
 @bot.command()
 async def mock(ctx):
-    words = client.logs_from(general, limit=1)
+    words = await channel.history(limit=1).flatten()
     for letter in words:
-    if type(letter) != str:
-        completeList.append(str(letter))
-    else:
-        if x%2 ==0:
-            upperLetter = letter.upper()
-            completeList.append(upperLetter)
+        if type(letter) != str:
+            completeList.append(str(letter))
         else:
-            completeList.append(letter)
-        x += 1
-        s = ''.join(completeList)
+            if x%2 ==0:
+                upperLetter = letter.upper()
+                completeList.append(upperLetter)
+            else:
+                completeList.append(letter)
+            x += 1
+            s = ''.join(completeList)
 
     await ctx.send(s)
-			
+
 @bot.command()
 async def eightball(ctx, *, question):
     responses = ['It is certain', 'It is decidedly so', 
@@ -707,7 +701,7 @@ async def despacito(ctx):
 @client.command()
 @commands.has_permissions(manage_messages=True)
 async def clear(ctx, amount : int):
-    await ctx.channel.purge(limit = amount)
+    await ctx.channel.purge(limit = amount, check=lambda msg: not msg.pinned)
 
 # outputs an error if the clear command fails
 @clear.error
@@ -879,7 +873,7 @@ async def help(ctx, arg=''):
         embed.add_field(name = "hb!interro", value = "Sends you a *'truth or dare question,'* an interrogation question.", inline = False)
         embed.add_field(name = "hb!DanseisSynthDaddy", value = "Sends a picture of the synth daddy himself.", inline = False)
         embed.add_field(name = "hb!cat", value = "Sends a random cat picture.", inline = False)
-	embed.add_field(name = "hb!mock", value = "CaLlS tHiS cOmMaNd.", inline = False)
+        embed.add_field(name = "hb!mock", value = "CaLlS tHiS cOmMaNd.", inline = False)
         embed.set_footer(text = "A very helpful birb.")
         await ctx.send(embed=embed)
         
@@ -904,5 +898,5 @@ async def on_ready():
     print('------')
     await bot.change_presence(activity=discord.Game(name='hb!help'))
 
-token = your_token_here
+token = "your token here"
 bot.run(token)
