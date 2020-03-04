@@ -441,25 +441,27 @@ solvable = ["000000000000001",
             "100000000000000"]
 
 msg = ""
-                        
-def commands_birb():
-	class Slapper(commands.Converter):
-		async def convert(self, ctx, argument):
-			to_slap = choice(ctx.guild.members)
-			return '{0.author} slapped {1} because *{2}*'.format(ctx, to_slap, argument)
+victim = ''
 
-	@bot.command()
-	async def blame(ctx, *, reason: Slapper):
-		await ctx.send(reason)
+@bot.command()
+async def blame(ctx, *, argument=''):
+    global victim
+    to_slap = choice(ctx.guild.members)
+    reason = '{0.author} slapped {1} because *{2}*'.format(ctx, victim, argument)
+    if argument == '':
+        argument = 'why not?'
+    if victim == '':
+        await ctx.send("Wait, you can't come up with an excuse if you didn't even slap anyone!")
+    await ctx.send(reason)
 
-	@bot.command()
-	async def slap(ctx, user):
-		await ctx.send('{0.author} slapped {1}'.format(ctx, user))
-
+@bot.command()
+async def slap(ctx, user):
+    global victim
+    await ctx.send('{0.author} slapped {1}'.format(ctx, user))
+    victim = user
+    return victim
 
 bot.add_cog(Music(bot))
-commands_birb()                          
-                        
 performed_moves = []
 all_legal_moves = all_moves(5)
 
@@ -494,13 +496,10 @@ async def disconnect(ctx):
     '''
         Bruteforce stop the music.
     '''
-    try:
-        channel = ctx.author.voice.channel
-    except:
-        return await ctx.send("You must be in a voice channel first.")
     async with ctx.typing():
         ctx.voice_client.stop()
     await ctx.send("I stopped the music.")
+    await ctx.send("If I'm still in the channel, ping a moderator to kick me from the voice channel.")
 
 @bot.command()
 async def joke(ctx):
@@ -550,9 +549,20 @@ async def joke(ctx):
 @client.event
 async def on_message(message):
     global msg
+    channel = message.channel
     if message.content.startswith("hb!"):
         await bot.process_commands(message)
-    else:
+        
+    elif message.content.startswith("Booyah!"):
+        if message.author.bot: 
+            await bot.process_commands(message)
+        else:
+            await channel.send("Booyah!")
+                    
+    elif message.content.startswith("(╯°□°）╯︵ ┻━┻"):
+        await channel.send("Please don't do that. ┬─┬ ノ( ゜-゜ノ)")
+        await bot.process_commands(message)
+    else: 
         msg = message
         await bot.process_commands(message)
         return msg
@@ -578,7 +588,7 @@ async def mock(ctx):
             x += 1
             s = ''.join(completeList)
 
-    print(s)
+    #print(s)
     await ctx.send(s)
 
 @bot.command()
@@ -897,7 +907,7 @@ async def help(ctx, arg=''):
         embed.add_field(name = "hb!despacito", value = "This is so sad. Alexa, play Despacito.", inline = False)
         embed.add_field(name = "hb!insult", value = "Sends an insult.", inline = False)
         embed.add_field(name = "hb!slap <user>", value = "Slap a user!", inline = False)
-        embed.add_field(name = "hb!blame <reason>", value = "You didn't slap that user. Blame a random user.", inline = False)
+        embed.add_field(name = "hb!blame <reason>", value = "Why did you slap that user?", inline = False)
         embed.add_field(name = "hb!fact", value = "Sends a random fact.", inline = False)
         embed.add_field(name = "hb!interro", value = "Sends you a *'truth or dare question,'* an interrogation question.", inline = False)
         embed.add_field(name = "hb!DanseisSynthDaddy", value = "Sends a picture of the synth daddy himself.", inline = False)
@@ -927,5 +937,5 @@ async def on_ready():
     print('------')
     await bot.change_presence(activity=discord.Game(name='hb!help'))
 
-token = "your token here"
+token = your_token
 bot.run(token)
