@@ -624,16 +624,16 @@ alphabet = {'a':':regional_indicator_a:',
             'x':':regional_indicator_x:',
             'y':':regional_indicator_y:',
             'z':':regional_indicator_z:',
-            '1':'clock1',
-            '2':'clock2',
-            '3':'clock3',
-            '4':'clock4',
-            '5':'clock5',
-            '6':'clock6',
-            '7':'clock7',
-            '8':'clock8',
-            '9':'clock9',
-            '0':'clock12'}
+            '1':':clock1:',
+            '2':':clock2:',
+            '3':':clock3:',
+            '4':':clock4:',
+            '5':':clock5:',
+            '6':':clock6:',
+            '7':':clock7:',
+            '8':':clock8:',
+            '9':':clock9:',
+            '0':':clock12:'}
 
 @bot.command()
 async def bigtext(ctx, *, phrase):
