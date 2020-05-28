@@ -452,6 +452,7 @@ async def blame(ctx, *, argument=''):
         argument = 'why not?'
     if victim == '':
         await ctx.send("Wait, you can't come up with an excuse if you didn't even slap anyone!")
+        return
     await ctx.send(reason)
 
 @bot.command()
@@ -558,6 +559,12 @@ async def on_message(message):
             await bot.process_commands(message)
         else:
             await channel.send("Booyah!")
+            
+    elif message.content.startswith("Mint"):
+        if message.author.bot: 
+            await bot.process_commands(message)
+        else:
+            await channel.send("Mint")
                     
     elif message.content.startswith("(╯°□°）╯︵ ┻━┻"):
         await channel.send("Please don't do that. ┬─┬ ノ( ゜-゜ノ)")
@@ -590,6 +597,48 @@ async def mock(ctx):
 
     #print(s)
     await ctx.send(s)
+
+alphabet = {'a':':regional_indicator_a:',
+            'b':':regional_indicator_b:',
+            'c':':regional_indicator_c:',
+            'd':':regional_indicator_d:',
+            'e':':regional_indicator_e:',
+            'f':':regional_indicator_f:',
+            'g':':regional_indicator_g:',
+            'h':':regional_indicator_h:',
+            'i':':regional_indicator_i:',
+            'j':':regional_indicator_j:',
+            'k':':regional_indicator_k:',
+            'l':':regional_indicator_l:',
+            'm':':regional_indicator_m:',
+            'n':':regional_indicator_n:',
+            'o':':regional_indicator_o:',
+            'p':':regional_indicator_p:',
+            'q':':regional_indicator_q:',
+            'r':':regional_indicator_r:',
+            's':':regional_indicator_s:',
+            't':':regional_indicator_t:',
+            'u':':regional_indicator_u:',
+            'v':':regional_indicator_v:',
+            'w':':regional_indicator_w:',
+            'x':':regional_indicator_x:',
+            'y':':regional_indicator_y:',
+            'z':':regional_indicator_z:'}
+
+@bot.command()
+async def bigtext(ctx, *, phrase):
+    global alphabet
+    retval = ''
+    phrase = phrase.lower()
+    for letter in phrase:
+        if letter in alphabet.keys():
+            retval += alphabet[letter]
+        elif letter == ' ':
+            retval += '  '
+        else:
+            continue
+
+    await ctx.send(retval)
 
 @bot.command()
 async def eightball(ctx, *, question):
@@ -937,5 +986,5 @@ async def on_ready():
     print('------')
     await bot.change_presence(activity=discord.Game(name='hb!help'))
 
-token = your_token
+token = "your_token_here"
 bot.run(token)
