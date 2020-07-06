@@ -174,17 +174,6 @@ class MusicPlayer(commands.Cog):
                                                f'`{source.requester}`')
             await self.next.wait()
 
-            # Make sure the FFmpeg process is cleaned up.
-            # this bit caused the entire process to close. we don't want that.
-            '''source.cleanup()
-            self.current = None
-
-            try:
-                # We are no longer playing this song...
-                await self.np.delete()
-            except discord.HTTPException:
-                pass'''
-
     def destroy(self, guild):
         """Disconnect and cleanup the player."""
         return self.bot.loop.create_task(self._cog.cleanup(guild))
@@ -420,7 +409,7 @@ class Music(commands.Cog):
         if not vc or not vc.is_connected():
             return await ctx.send('I\'m not playing anything right now.' )
 
-        await self.cleanup(ctx.guild)                       
+        await self.cleanup(ctx.guild)
                         
 def_board = "011111111111111"
 board_str = "011111111111111"
@@ -443,6 +432,297 @@ solvable = ["000000000000001",
 msg = ""
 victim = ''
 
+ttt_board = ['0', '1', '2',
+             '3', '4', '5',
+             '6', '7', '8']
+
+winning_combo = [(0, 3, 6), (1, 4, 7), (2, 5, 8), (0, 4, 8),
+                 (6, 4, 2), (3, 4, 5), (0, 1, 2), (6, 7, 8)]
+
+player = 'Player 1'
+
+def valid_moves(board):
+    valid = []
+    for slots in board:
+        try:
+            slot = int(slots)
+            valid.append(slot)
+        except:
+            continue
+
+    return valid
+    
+def is_valid_move(board, pos, player):
+    try:
+        section = board[pos]
+    except IndexError:
+        return False
+    if section == 'X' or section == 'O':
+        return False
+    
+    return True
+
+def move(board, pos, player):
+    ''' '''
+    if player == 'Player 1':
+        board[pos] = 'X'
+    else:
+        board[pos] = 'O'
+
+    return board
+
+def is_game_over(ctx, board, winning_combo):
+    for combo in winning_combo:
+        sample = board[combo[0]]
+        if sample == board[combo[0]] and sample == board[combo[1]] and sample == board[combo[2]]:
+            if sample == 'X':
+                return 'Player 1 has won! Resetting board...'
+            elif sample == 'O':
+                return 'Player 2 has won! Resetting board...'
+
+            board = ['0', '1', '2','3', '4', '5','6', '7', '8']
+            return board
+        
+    return False
+
+@bot.command()
+async def ttt(ctx, pos=''):
+    global ttt_board
+    board = ttt_board
+    global winning_combo
+    global player
+    
+    try:
+        if pos == '':
+            display = '```\n' + '+-----------+' + \
+            '\n| ' + ' | '.join(board[0:3]) + ' |' + \
+            '\n|---|---|---|' + \
+            '\n| ' + ' | '.join(board[3:6]) + ' |' + \
+            '\n|---|---|---|' + \
+            '\n| ' + ' | '.join(board[6:9]) + ' |' + \
+            '\n+-----------+```'
+            await ctx.send(display)
+            return
+        if pos == 'reset':
+            await ctx.send('The board has been reset.')
+            board = board = ['0', '1', '2','3', '4', '5','6', '7', '8']
+            ttt_board = board
+            return board
+        else:
+            pos = int(pos)
+    except ValueError:
+        await ctx.send('Sorry, only numbers are accepted.')
+        return
+
+    if is_valid_move(board, pos, player):
+        msg = player + ' entered index ' + str(pos)
+        await ctx.send(msg)
+        if player == 'Player 1':
+            move(board, pos, player)
+            player = 'Player 2'
+        else:
+            move(board, pos, player)
+            player = 'Player 1'
+
+        display = '```\n' + '+-----------+' + \
+        '\n| ' + ' | '.join(board[0:3]) + ' |' + \
+        '\n|---|---|---|' + \
+        '\n| ' + ' | '.join(board[3:6]) + ' |' + \
+        '\n|---|---|---|' + \
+        '\n| ' + ' | '.join(board[6:9]) + ' |' + \
+        '\n+-----------+```'
+        await ctx.send(display)
+
+        is_game_won = is_game_over(ctx, board, winning_combo)
+        if type(is_game_won) is not bool:
+            await ctx.send(is_game_won)
+            board = ['0', '1', '2','3', '4', '5','6', '7', '8']
+            ttt_board = board
+            return board
+            
+        valid = valid_moves(board)
+        if len(valid) == 0:
+            await ctx.send('No one won. Resetting board...')
+            board = ['0', '1', '2','3', '4', '5','6', '7', '8']
+            ttt_board = board
+            return board
+
+        msg = 'It is ' + player + "'s turn."
+        await ctx.send(msg)
+        return player
+        return board
+
+    if not is_valid_move(board, pos, player):
+        await ctx.send('Sorry, that move is either out of bounds, or someone is already occuping that space.')
+        return
+
+ff_board = [[':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+             [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+             [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+             [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+             [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+             [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:']]
+
+ff_player = 'Player 1'
+
+def ff_valid_moves(board):
+    valid = []
+    for row in board:
+        for slot in row:
+            if slot == ':black_circle:':
+                valid.append(slot)
+
+    return valid
+
+def ff_is_valid_move(board, pos):
+    if pos < 0 or pos > 6:
+        return False
+    else:
+        sample = board[0][pos]
+        if sample == ':red_circle:' or sample == ':blue_circle:':
+            return False
+
+    return True
+
+def ff_is_game_over(L):
+    h, w = len(L), len(L[0])
+    diags = [[L[h-1-q][p-q] for q in range(min(p, h-1), max(0, p-w+1)-1, -1)] for p in range(h+w-1)]
+    anti_diags = [[L[p - q][q] for q in range(max(p-h+1,0), min(p+1, w))] for p in range(h + w - 1)]
+    horiz = L
+    i = 0
+    j = 0
+    vert = []
+    while i < w:
+        column = []
+        while j < h:
+            column.append(L[j][i])
+            j += 1
+
+        j = 0
+        i += 1
+        vert.append(column)
+
+    if type(search(diags)) is not bool:
+        return search(diags)
+    elif type(search(anti_diags)) is not bool:
+        return search(anti_diags)
+    elif type(search(horiz)) is not bool:
+        return search(horiz)
+    else:
+        if type(search(vert)) is not bool:
+            return search(vert)
+
+    return False
+
+def search(config):
+    for row in config:
+        n = 0
+        while n < len(row):
+            for i in range(len(row)):
+                if len(row[n:i+1]) == 4:
+                    if row[n:i+1] == [':red_circle:', ':red_circle:', ':red_circle:', ':red_circle:']:
+                        return 'Player 1 won!'
+                    elif row[n:i+1] == [':blue_circle:', ':blue_circle:', ':blue_circle:', ':blue_circle:']:
+                        return 'Player 2 won!'
+                    
+            n += 1
+
+    return False
+
+def ff_move(board, pos, player):
+    if player == 'Player 1':
+        puck = ':red_circle:'
+    else:
+        puck = ':blue_circle:'
+
+    i = -1
+    MAX = -7
+    while i > MAX:
+        if board[i][pos] == ':black_circle:':
+            board[i][pos] = puck
+            break
+
+        i -= 1
+        
+    return board
+
+@bot.command()
+async def ff(ctx, pos=''):
+    global ff_board
+    global ff_player
+
+    try:
+        if pos == '':
+            embed = discord.Embed(title = "Board", description = "|--------------------------------------|", color=0x45F4E9)
+            embed.add_field(name = "| :zero: | :one: | :two: | :three: | :four: | :five: | :six: |", value = "|=======================|", inline = False)
+            for row in ff_board:
+                sect = '| ' + ' | '.join(row) + ' |'
+                embed.add_field(name = sect, value = '|--------------------------------------|', inline = False)
+            await ctx.send(embed=embed)
+            return
+        if pos == 'reset':
+            ff_board = [[':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+            [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+            [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+            [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+            [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+            [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:']]
+            await ctx.send('The board has been reset.')
+            return ff_board
+        pos = int(pos)
+    except ValueError:
+        await ctx.send('Sorry, only numbers are allowed.')
+        return
+
+    if ff_is_valid_move(ff_board, pos):
+        valid = ff_valid_moves(ff_board)
+        msg = ff_player + ' entered index ' + str(pos)
+        await ctx.send(msg)
+        if ff_player == 'Player 1':
+            ff_move(ff_board, pos, ff_player)
+            ff_player = 'Player 2'
+        else:
+            ff_move(ff_board, pos, ff_player)
+            ff_player = 'Player 1'
+
+        embed = discord.Embed(title = "Board", description = "|--------------------------------------|", color=0x45F4E9)
+        embed.add_field(name = "| :zero: | :one: | :two: | :three: | :four: | :five: | :six: |", value = "|=======================|", inline = False)
+        for row in ff_board:
+            sect = '| ' + ' | '.join(row) + ' |'
+            embed.add_field(name = sect, value = '|--------------------------------------|', inline = False)
+        await ctx.send(embed=embed)
+
+        is_game_won = ff_is_game_over(ff_board)
+        if type(is_game_won) is not bool:
+            await ctx.send(is_game_won)
+            ff_board = [[':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+             [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+             [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+             [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+             [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+             [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:']]
+            await ctx.send('The board has been reset.')
+            return ff_board
+
+        if len(valid) == 0:
+            await ctx.send('No one won. Resetting the board...')
+            ff_board = [[':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+             [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+             [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+             [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+             [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:'],
+             [':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:', ':black_circle:']]
+            return ff_board
+            
+
+        msg = 'It is ' + player + "'s turn."
+        await ctx.send(msg)
+        return ff_player
+    
+    if not ff_is_valid_move(ff_board, pos):
+        await ctx.send('That move is either out of bounds or occupied. Try again.')
+
+### STOP SCROLLING YOU'RE GOING TOO FAR ###
 @bot.command()
 async def blame(ctx, *, argument=''):
     global victim
@@ -498,13 +778,24 @@ async def disconnect(ctx):
         Bruteforce stop the music.
     '''
     async with ctx.typing():
+        await ctx.send("I stopped the music.")
+        await ctx.send("If I'm still in the channel, ping a moderator to kick me from the voice channel.")
         ctx.voice_client.stop()
-    await ctx.send("I stopped the music.")
-    await ctx.send("If I'm still in the channel, ping a moderator to kick me from the voice channel.")
 
 @bot.command()
-async def joke(ctx):
-    jokes = {"What does James Bond do before bed?":"He goes undercover.",
+async def suggest(ctx, *, phrase):
+    # check if server is Team Pizza first
+    if ctx.guild.id == 709245835140923403:
+        # await ctx.send("Congratulations! This is the Team Pizza server!")
+        channel = client.get_channel(718175227695071324)
+        username = ctx.message.author.display_name
+        await channel.send('> ' + phrase)
+        await channel.send('@' + username)
+        
+    else:
+        await ctx.send("Sorry, this command only works on the Team Pizza server.")
+
+jokes =     {"What does James Bond do before bed?":"He goes undercover.",
              "What is Gen Z's least favorite toy?":"A BOOMERang.",
              "Why were people running towards Finland?":"It was a race to the Finnish.",
              "The first guy that figured out how to split an atom,":"must’ve been blown away",
@@ -539,9 +830,46 @@ async def joke(ctx):
              "My stupid cousin thinks he's collected one of every board game ever made.":"That idiot doesnt have a Clue.",
              "Oho, I ate a clock yesrerday and it was very time consuming.":"Especially when I went for seconds.",
              "How was the Roman Empire cut in half?":"With a pair of Caesars.",
-             "I just started a business where we specialize in weighing tiny objects.":"It's a small scale operation."
+             "I just started a business where we specialize in weighing tiny objects.":"It's a small scale operation.",
+             'My friend claims that he can print a gun using his 3D printer, but I’m not impressed.':'I have had a Canon printer for years.',
+             'Why do fishes swim in salt water?':'Because pepper would make them sneeze!',
+             'An avalanche has started on Mount Everest that threatens to wipe out 20% of its surrounding area.':'This is snow joke.',
+             'The roads were so rough, it damaged my laptop.':'It was a hard drive.',
+             'You can distinguish an alligator from a crocodile':'by paying attention to whether the animal sees you later or in a while.',
+             'My neighbor with big boobs has been working topless in the garden all afternoon':'I just wish his wife would do the same',
+             'I have a fear of overly complicated buildings':'I have a complex complex complex',
+             'I got a parking ticket today and my husband just laughed.':'He thought it was a fine joke.',
+             'Anyone else noticing a recent influx of herb related jokes?':'It is that thyme of year, I suppose.',
+             'I love how the Earth rotates.':'It makes my day.',
+             'My wife just threw away my favourite herb.':'She\'s such a Thyme waster',
+             'During the riots the other day, a person was beat up by six dwarfs.':'Not Happy.',
+             'How does Cyndi Lauper order her spices?':'Thyme after thyme',
+             'What do you call a military shipment full of t rexes?':'small arms',
+             'Do you know what makes me cross?':'When the signal changes to a man walking.',
+             'A frog decided to do a genealogy test':'Turns out he’s a tad polish',
+             "Dwayne Johnson paid me to clean up and organize his craft room, but sadly, I lost his scrapbook cutting tool.":"I lost the Rock’s paper scissors.",
+             "I want to hear 99 people sing 'Africa' by Toto.":"It's something that a hundred men or more could never do...",
+             "Ask me what I think about windmills. \n *you ask me what I think about windmills.*":"Big fan.",
+             "What’s orange and sounds like a parrot?":"A carrot",
+             "What do you call a dog that can do magic?":"A Labracadabrador.",
+             "When does a joke become a 'dad joke?'":"When it becomes apparent.",
+             "I can’t see why everyone likes bananas":"I just don’t see the a-peal",
+             "What is the least spoken language in the world?":"Sign language",
+             "A man walks into a bar with a slab of asphalt under his arm.":"He shouts, 'A beer please! And one for the road!'",
+             "The bartender does a little jig whenever he opens a new keg.":"It's a tap dance.",
+             "My friend named his loud dog Forrest":"Because he has a lot of bark!",
+             "What do you call a bulletproof Irishman?":"Rick O'Shea",
+             "If you come across a cow in post-apocalyptic times, you'd better not let it go.":"That would be a missed steak.",
+             "What do you call a sleepwalking nun?":"A Roaming Catholic.",
+             "Why couldn't the bike standup by itself?":"It was two tired.",
+             "Archaeology is cool and all...":"But Geology rocks.",
+             "Did you hear about the guy who ate bananas whole?":"He didn’t peel too well",
+             "What do flutes and old windmills have in common?":"They are both woodwind instruments."
              }
 
+@bot.command()
+async def joke(ctx):
+    global jokes
     joke_key = random.choice(list(jokes.keys()))
     await ctx.send(joke_key)
     await asyncio.sleep(5)
@@ -553,22 +881,29 @@ async def on_message(message):
     channel = message.channel
     if message.content.startswith("hb!"):
         await bot.process_commands(message)
-        
-    elif message.content.startswith("Booyah!"):
+    elif message.content.startswith("Booyah!") or message.content.startswith("booyah!"):
         if message.author.bot: 
             await bot.process_commands(message)
         else:
             await channel.send("Booyah!")
-            
-    elif message.content.startswith("Mint"):
+    elif message.content.startswith("Mint") or message.content.startswith("mint"):
         if message.author.bot: 
             await bot.process_commands(message)
         else:
             await channel.send("Mint")
-                    
     elif message.content.startswith("(╯°□°）╯︵ ┻━┻"):
         await channel.send("Please don't do that. ┬─┬ ノ( ゜-゜ノ)")
         await bot.process_commands(message)
+    elif message.content.startswith("Cheetle") or message.content.startswith("cheetle"):
+        if message.author.bot: 
+            await bot.process_commands(message)
+        else:
+            await channel.send("Cheetle")
+    elif message.content.startswith("Oatmeal") or message.content.startswith("oatmeal"):
+        if message.author.bot: 
+            await bot.process_commands(message)
+        else:
+            await channel.send("OATMEAL OATMEAL OATMEAL OATMEAL OATMEAL OATMEAL")
     else: 
         msg = message
         await bot.process_commands(message)
@@ -578,24 +913,25 @@ async def on_message(message):
 async def mock(ctx):
     global msg
     msg = msg.content
-    # handle uppercase by forcing it to be lowercase.
     msg = msg.lower()
     words = msg
     x = 0
     completeList = []
-    for letter in words:
-        if type(letter) != str:
-            completeList.append(str(letter))
-        else:
-            if x%2 ==0:
-                upperLetter = letter.upper()
-                completeList.append(upperLetter)
+    try:
+        for letter in words:
+            if type(letter) != str:
+                completeList.append(str(letter))
             else:
-                completeList.append(letter)
-            x += 1
-            s = ''.join(completeList)
-
-    #print(s)
+                if x%2 ==0:
+                    upperLetter = letter.upper()
+                    completeList.append(upperLetter)
+                else:
+                    completeList.append(letter)
+                x += 1
+                s = ''.join(completeList)
+    except:
+        await ctx.send('Tiny issue when trying to mock someone.')
+        
     await ctx.send(s)
 
 alphabet = {'a':':regional_indicator_a:',
@@ -798,7 +1134,7 @@ async def despacito(ctx):
 # Clear command, only for users who can manage messages
 @client.command()
 @commands.has_permissions(manage_messages=True)
-async def clear(ctx, amount : int):
+async def clear(ctx, amount : int, ):
     await ctx.channel.purge(limit = amount, check=lambda msg: not msg.pinned)
 
 # outputs an error if the clear command fails
@@ -901,8 +1237,8 @@ async def info(ctx):
     # Shows the number of servers the bot is member of.
     embed.add_field(name="Servers I'm on:", value=f"{len(bot.guilds)}", inline = False)
 
-    # give users a link to invite thsi bot to their server
-    embed.add_field(name="Github", value="https://github.com/tiNsLeY799/Helpful-Birb-Public", inline = False)
+    # give users a link to invite this bot to their server
+    embed.add_field(name="Invite me to your server!", value="https://discordapp.com/api/oauth2/authorize?client_id=628823832999886848&permissions=0&scope=bot", inline = False)
 
     await ctx.send(embed=embed)
 
@@ -916,6 +1252,7 @@ async def help(ctx, arg=''):
         embed.add_field(name = "Board / Peg Solitaire", value = "Do hb!help board for more info about these commands.", inline = False)
         embed.add_field(name = "Misc", value = "Do hb!help misc for more info about these commands", inline = False)
         embed.add_field(name = "Fun", value = "Do hb!help fun for more info about these commands", inline = False)
+        embed.add_field(name = "Tic Tac Toe", value = "Do hb!help ttt for more info about these commands", inline = False)
         embed.set_footer(text = "A very helpful birb.")
         await ctx.send(embed=embed)
         
@@ -955,6 +1292,7 @@ async def help(ctx, arg=''):
         embed.add_field(name = "hb!feature_request", value = "Send some information about adding more commands to Helpful Birb.", inline = False)
         embed.add_field(name = "hb!info", value = "Sends you information on who made me and more.", inline = False)
         embed.add_field(name = "hb!help", value = "Sends this command.", inline = False)
+        embed.add_field(name = "hb!suggest", value = "Suggest a feature! (ONLY WORKS IN TEAM PIZZA SERVER).", inline = False)
         embed.set_footer(text = "A very helpful birb.")
         await ctx.send(embed=embed)
         
@@ -972,6 +1310,14 @@ async def help(ctx, arg=''):
         embed.add_field(name = "hb!DanseisSynthDaddy", value = "Sends a picture of the synth daddy himself.", inline = False)
         embed.add_field(name = "hb!cat", value = "Sends a random cat picture.", inline = False)
         embed.add_field(name = "hb!mock", value = "CaLlS tHiS cOmMaNd. Mocks the last previous sent message (ignores bot calls.)", inline = False)
+        embed.set_footer(text = "A very helpful birb.")
+        await ctx.send(embed=embed)
+
+    elif arg == 'tic tac toe' or arg == 'Tic Tac Toe' or arg == 'ttt' or arg == 'TTT':
+        embed = discord.Embed(title = "Tic Tac Toe", description = "A classic game of Tic-Tac-Toe!", color=0x45F4E9)
+        embed.add_field(name = "hb!ttt", value = "Sends you the Tic Tac Toe board.", inline = False)
+        embed.add_field(name = "hb!ttt pos", value = "Tries a move on the board.", inline = False)
+        embed.add_field(name = "hb!ttt reset", value = "Resets the tic tac toe board..", inline = False)
         embed.set_footer(text = "A very helpful birb.")
         await ctx.send(embed=embed)
         
@@ -996,5 +1342,5 @@ async def on_ready():
     print('------')
     await bot.change_presence(activity=discord.Game(name='hb!help'))
 
-token = "your_token_here"
+token = 'your token here'
 bot.run(token)
