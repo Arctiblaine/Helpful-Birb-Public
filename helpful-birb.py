@@ -1317,8 +1317,16 @@ async def help(ctx, arg=''):
         embed = discord.Embed(title = "Tic Tac Toe", description = "A classic game of Tic-Tac-Toe!", color=0x45F4E9)
         embed.add_field(name = "hb!ttt", value = "Sends you the Tic Tac Toe board.", inline = False)
         embed.add_field(name = "hb!ttt pos", value = "Tries a move on the board.", inline = False)
-        embed.add_field(name = "hb!ttt reset", value = "Resets the tic tac toe board..", inline = False)
-        embed.set_footer(text = "A very helpful birb.")
+        embed.add_field(name = "hb!ttt reset", value = "Resets the tic tac toe board.", inline = False)
+        embed.set_footer(text = "A very helpful birb. Board resets when there are no more moves or someone won.")
+        await ctx.send(embed=embed)
+
+    elif arg == 'find four' or arg == 'Find Four' or arg == 'ff' or arg == 'FF':
+        embed = discord.Embed(title = "Find Four / Connect Four", description = "A classic game of Connect Four.", color=0x45F4E9)
+        embed.add_field(name = "hb!ff", value = "Sends you the Find Four.", inline = False)
+        embed.add_field(name = "hb!ff pos", value = "Tries a move on the board.", inline = False)
+        embed.add_field(name = "hb!ff reset", value = "Resets the board.", inline = False)
+        embed.set_footer(text = "A very helpful birb. Board resets when there are no more moves or someone won.")
         await ctx.send(embed=embed)
         
     else:
@@ -1342,5 +1350,5 @@ async def on_ready():
     print('------')
     await bot.change_presence(activity=discord.Game(name='hb!help'))
 
-token = 'your token here'
+token = your_token_here
 bot.run(token)
