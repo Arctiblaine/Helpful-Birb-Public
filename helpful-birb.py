@@ -722,7 +722,6 @@ async def ff(ctx, pos=''):
     if not ff_is_valid_move(ff_board, pos):
         await ctx.send('That move is either out of bounds or occupied. Try again.')
 
-### STOP SCROLLING YOU'RE GOING TOO FAR ###
 @bot.command()
 async def blame(ctx, *, argument=''):
     global victim
@@ -762,13 +761,18 @@ def text_getter(filename):
     '''
         Opens a file and returns a list of quotes.
     '''
-    quest = []
-    file_content = open(filename, 'r')
-    for lines in file_content:
-        if lines[0] == '#':
-            continue
-        else:
-            quest.append(lines)
+    if ".txt" in filename:
+        quest = []
+        file_content = open(filename, 'r')
+        for lines in file_content:
+            if lines[0] == '#':
+                continue
+            else:
+                quest.append(lines)
+
+    else:
+        quest = filename
+
     index = random.randint(0, len(quest) - 1)
     return quest[index]
 
@@ -877,11 +881,84 @@ async def joke(ctx):
 
 @client.event
 async def on_message(message):
-    global msg
-    channel = message.channel
     if message.content.startswith("hb!"):
         await bot.process_commands(message)
-    elif message.content.startswith("Booyah!") or message.content.startswith("booyah!"):
+        return
+    
+    global msg
+    aggressive_resp = ['Stop bothering me.', 'Fuck off.', 'Apparently leaving me alone isn\'t an option I take it?', 'You could ask nicely.', 'Go away.', 'Oh god, it\'s you again.']
+    questions = ['who', 'what', 'when', 'where', 'how', 'how', 'do', 'does', 'did', 'will', 'think']
+    global jokes
+
+    channel = message.channel
+    message.content = message.content.lower()
+
+    if message.content.startswith("birb") and len(message.content) <= 5 or message.content.startswith('hi birb'):
+        if "?" in message.content:
+            channel = message.channel
+            await channel.send('Yes? (say hi)')
+
+            t1 = datetime.now()
+
+            def check(m):
+                correct = ['hi', 'hello', 'hiya', 'hi', 'howdy', '']
+                return m.content in correct and m.channel == channel
+
+            msg = await bot.wait_for('message', check=check)
+
+            if t1.hour > 0 and t1.hour < 12:
+                await channel.send('Good morning, {.author.name}. How are you?'.format(msg))
+            elif t1.hour > 12 and t1.hour < 16:
+                await channel.send('Good afternoon, {.author.name}. How are you?'.format(msg))
+            elif t1.hour > 16 and t1.hour < 24:
+                await channel.send('Good evening, {.author.name}. How are you?'.format(msg))
+            else:
+                # something went wrong.
+                await channel.send('Hello {.author.name}. How are you?'.format(msg))
+
+        else:
+            await channel.send(text_getter(aggressive_resp))
+
+    if message.content.startswith('birb') or message.content.startswith('hey birb'):
+        if 'joke' in message.content:
+            joke_key = random.choice(list(jokes.keys()))
+            await channel.send(joke_key)
+            await asyncio.sleep(5)
+            await channel.send(jokes[joke_key])
+
+        if 'tell' in message.content and 'joke' not in message.content:
+            await channel.send("No more questions.")
+            await channel.send('''*Ruthless, my style as a juvenile \nRan with a gang, slanged in the meanwhile...\n...told Ice Cube to leave the car runnin' \nWalked in, said: "This is a robbery"*''')
+
+        try:
+            structure = message.content.split()
+            if structure[1] in questions or '?' in message.content or message.content.startswith('birb'):
+                if '?' in message.content:
+                    await asyncio.sleep(2)
+                    responses = ['Oh, you know.', 'What do you think?', 
+                                    'Wouldn\'t you like to know.', 'Okay.', 
+                                     'Alright.', 'Don\'t count on me for a straight answer.', 
+                                    'Most likely.', 'I\'ll say "yes" to whatever you\'re asking so you can leave me alone.', 
+                                    'Yes.', 'Right.', 'Ask again later', 
+                                    'Better not tell you now.', 'I don\'t know.', 
+                                    'Run that by me again?', 'Don\'t count on it.', 
+                                    'No.', 'Don\'t ask.', "If I say yes, will you leave me be?",
+                                    'Yeah right.', 'If I say no, will you leave me alone?',
+                                     '...what?', "What kind of question is that?", "Mhm. What? You say something?"]
+                        
+                    await channel.send(random.choice(responses))
+
+                elif '?' in message.content and 'tell' not in message.content:
+                    await channel.send("That's not a question, that's a demand.")
+                    await channel.send(text_getter(aggressive_resp))
+
+            await bot.process_commands(message)
+
+        except IndexError:
+            await bot.process_commands(message)
+
+    channel = message.channel
+    if message.content.startswith("Booyah!") or message.content.startswith("booyah!"):
         if message.author.bot: 
             await bot.process_commands(message)
         else:
@@ -904,10 +981,10 @@ async def on_message(message):
             await bot.process_commands(message)
         else:
             await channel.send("OATMEAL OATMEAL OATMEAL OATMEAL OATMEAL OATMEAL")
-    else: 
-        msg = message
-        await bot.process_commands(message)
-        return msg
+
+    msg = message
+    await bot.process_commands(message)
+    return msg
 
 @bot.command()
 async def mock(ctx):
@@ -986,9 +1063,7 @@ async def bigtext(ctx, *, phrase):
 
     await ctx.send(retval)
 
-@bot.command()
-async def eightball(ctx, *, question):
-    responses = ['It is certain', 'It is decidedly so', 
+responses = ['It is certain', 'It is decidedly so', 
                 'Without a doubt', 'Yes - definitely', 
                 'You may rely on it', 'As I see it, yes', 
                 'Most likely', 'Outlook good', 'Signs point to yes', 
@@ -998,6 +1073,10 @@ async def eightball(ctx, *, question):
                 'My reply is no', 'My sources say no', 
                 'Outlook not so good', 'Very doubtful',
                  '...what?']
+
+@bot.command()
+async def eightball(ctx, *, question):
+    global responses
     await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses)}')
 
 @bot.command()
@@ -1120,16 +1199,15 @@ async def time(ctx):
 
 @bot.command()
 async def quote(ctx):
-    quote = text_getter("quote-file.txt")
-    await ctx.send(quote)
+    await ctx.send(text_getter("quote-file.txt"))
 
 @bot.command()
 async def despacito(ctx):
     choice = random.randint(1, 2)
-    if choice == 1:
-        await ctx.send('https://www.youtube.com/watch?v=kJQP7kiw5Fk')
-    elif choice == 2:
-        await ctx.send('https://www.youtube.com/watch?v=W3GrSMYbkBE')
+    despacito = ['https://www.youtube.com/watch?v=kJQP7kiw5Fk',
+                 'https://www.youtube.com/watch?v=W3GrSMYbkBE']
+
+    await ctx.send(despacito[choice])
 
 # Clear command, only for users who can manage messages
 @client.command()
@@ -1208,20 +1286,30 @@ async def number(ctx, inp1, inp2):
 
 @bot.command()
 # modified idea by Toasty, better algorithm by me.
-async def cat(ctx):
-    random_inp = random.randint(0, len(cat) - 1)
-    cat = ["http://giphygifs.s3.amazonaws.com/media/6C4y1oxC6182MsyjvK/giphy.gif", 
+async def pets(ctx):
+    cat_list = ["http://giphygifs.s3.amazonaws.com/media/6C4y1oxC6182MsyjvK/giphy.gif", 
 	       "https://media.giphy.com/media/WYEWpk4lRPDq0/giphy.gif", 
 	       "http://giphygifs.s3.amazonaws.com/media/S6VGjvmFRu5Qk/giphy.gif", 
 	       "http://giphygifs.s3.amazonaws.com/media/FZuRP6WaW5qg/giphy.gif", 
-           "https://media.giphy.com/media/rwCX06Y5XpbLG/giphy.gif", 
+               "https://media.giphy.com/media/rwCX06Y5XpbLG/giphy.gif", 
 	       "https://media.giphy.com/media/10SAlsUFbyl5Dy/giphy.gif", 
 	       "https://media.giphy.com/media/tBxyh2hbwMiqc/giphy.gif", 
-           "http://giphygifs.s3.amazonaws.com/media/iTOS89Y0gD1ny/giphy.gif", 
+               "http://giphygifs.s3.amazonaws.com/media/iTOS89Y0gD1ny/giphy.gif", 
 	       "http://giphygifs.s3.amazonaws.com/media/2QHLYZFJgjsFq/giphy.gif", 
-	       "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif"]
+	       "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif",
+                'https://media.discordapp.net/attachments/464509856020299777/736429453542162442/IMG_20190103_152723.jpg?width=725&height=544',
+                'https://cdn.discordapp.com/attachments/464509856020299777/736429928958132234/IMG_20200407_154509.jpg',
+                'https://cdn.discordapp.com/attachments/694819944751431751/736430648838848592/image1.jpg',
+                'https://cdn.discordapp.com/attachments/694819944751431751/736430648230936656/image0.jpg',
+                'https://cdn.discordapp.com/attachments/464509856020299777/736431148720324648/FB_IMG_1560716697263.jpg',
+                'https://cdn.discordapp.com/attachments/464509856020299777/736431498642587730/IMG_20190823_185209.jpg',
+                'https://steamuserimages-a.akamaihd.net/ugc/400053744919247811/38F3709BE6E72606D4F1924014E258EC8C6EAFE0/?imw=512&imh=288&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=true',
+                'https://cdn.discordapp.com/attachments/464509856020299777/736434307706388601/IMG_3829.jpg',
+                'https://cdn.discordapp.com/attachments/464509856020299777/736434307379232918/IMG_9102.jpg']
 
-    await ctx.send(cat[random_inp])
+    random_inp = random.randint(0, len(cat_list) - 1)
+
+    await ctx.send(cat_list[random_inp])
 
 @bot.command()
 async def feature_request(ctx):
@@ -1253,6 +1341,7 @@ async def help(ctx, arg=''):
         embed.add_field(name = "Misc", value = "Do hb!help misc for more info about these commands", inline = False)
         embed.add_field(name = "Fun", value = "Do hb!help fun for more info about these commands", inline = False)
         embed.add_field(name = "Tic Tac Toe", value = "Do hb!help ttt for more info about these commands", inline = False)
+        embed.add_field(name = "Find Four / Connect Four", value = "Do hb!help ff for more info about these commands", inline = False)
         embed.set_footer(text = "A very helpful birb.")
         await ctx.send(embed=embed)
         
@@ -1335,6 +1424,8 @@ async def help(ctx, arg=''):
         embed.add_field(name = "Board / Peg Solitaire", value = "Do hb!help board for more info about these commands.", inline = False)
         embed.add_field(name = "Misc", value = "Do hb!help misc for more info about these commands", inline = False)
         embed.add_field(name = "Fun", value = "Do hb!help fun for more info about these commands", inline = False)
+        embed.add_field(name = "Tic Tac Toe", value = "Do hb!help ttt for more info about these commands", inline = False)
+        embed.add_field(name = "Find Four / Connect Four", value = "Do hb!help ff for more info about these commands", inline = False)
         embed.set_footer(text = "A very helpful birb.")
         await ctx.send(embed=embed)
 
@@ -1344,11 +1435,14 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_ready():
+    motds = ["How do I turn this off?", "Lmao made you look.", "hb!help"]
+    index = random.randint(0, len(motds)-1)
     print('Logged in as')
     print(bot.user.name)
-    print(bot.user.id)
+    t1 = datetime.now()
+    print("Time start:", t1)
     print('------')
-    await bot.change_presence(activity=discord.Game(name='hb!help'))
+    await bot.change_presence(activity=discord.Game(name=motds[index]))
 
-token = your_token_here
+token = ""
 bot.run(token)
